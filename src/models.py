@@ -34,6 +34,15 @@ class Planet(db.Model):
     population: Mapped[int] = mapped_column(nullable=False)
     favorites_planets: Mapped[List["FavoritePlanet"]] = relationship("FavoritePlanet",back_populates="planet")
 
+    def serialize(self):
+        return{
+            "id":self.id,
+            "name": self.name,
+            "description": self.description,
+            "population":self.population,
+            "favorites_planets": self.favorites_planets
+        }
+
 
 class Character(db.Model):
     __tablename__ = "character"
@@ -42,6 +51,16 @@ class Character(db.Model):
     gender:Mapped[enum] = mapped_column(Enum(CharactersGenders))
     side:Mapped[enum] = mapped_column(Enum(CharacterSide))
     favorites_characters: Mapped[List["FavoriteCharacter"]] = relationship("FavoriteCharacter", back_populates="character")
+
+    def serialize(self):
+        return{
+            "id": self.id,
+            "name": self.name,
+            "gender":self.gender.value,
+            "side":self.side.value,
+            "favorites_characters":self.favorites_characters
+
+        }
 
 class FavoritePlanet(db.Model):
     __tablename__ = "favorites_planets"
