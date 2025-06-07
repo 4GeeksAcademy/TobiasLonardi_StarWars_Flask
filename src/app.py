@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User,Character, Planet
+from models import db, User,Character, Planet,FavoriteCharacter, FavoritePlanet
 #from models import Person
 
 app = Flask(__name__)
@@ -39,6 +39,83 @@ def sitemap():
 @app.route("/health-check", methods=["GET"])
 def health_check():
     return jsonify("ok"), 200
+
+
+@app.route("/users", methods=["GET"])
+def getUser():
+    users=User.query.all()
+    return jsonify([item.serialize() for item in users]), 200
+
+
+
+@app.route("/users/favorites/<int:user_id>", methods=["GET"])
+def getUserFavorites(user_id=None):
+    user=User.query.get(user_id)
+    if(user is not None):
+        user = user.serialize()
+        fav_character=user["favorites_planets"]
+        fav_planets=user["favorites_character"]
+        result_fav=fav_character+fav_planets
+        return jsonify([item.serialize() for item in result_fav]), 200
+    
+    return jsonify("no se encontro el usuario"), 404 
+   
+@app.route("/favorites/planet/<int:id>", methods=["POST"])
+def addNewPlanetFavorite(id=None):
+    data = request.json
+    favorite= FavoritePlanet(user_id=data["user_id"], planet_id=id)
+    db.session.add(favorite)
+    try:
+        db.session.commit()
+        return jsonify("planet saved"), 201
+    
+    except Exception as error:
+        db.session.rollback()
+        return jsonify(f'error: {error}')
+    
+@app.route("/favorites/people/<int:id>", methods=["DELETE"])
+def deleteFavoriteCharacter(id=None):
+    character=FavoriteCharacter.query.get(id)
+
+    if(character is None):
+        return jsonify("user not found"),404
+    
+    db.session.delete(character)
+    try:
+        db.session.commit()
+        return jsonify("eliminado correctamente"), 204
+
+    except Exception as error:
+        return jsonify(f"Error: {error.args}"),404
+    
+@app.route("/favorites/planet/<int:id>", methods=["DELETE"])
+def deleteFavoritePlanet(id=None):
+    planet=FavoritePlanet.query.get(id)
+
+    if(planet is None):
+        return jsonify("user not found"),404
+    
+    db.session.delete(planet)
+    try:
+        db.session.commit()
+        return jsonify("eliminado correctamente"), 204
+
+    except Exception as error:
+        return jsonify(f"Error: {error.args}"),404
+
+@app.route("/favorites/people/<int:id>", methods=["POST"])
+def addNewCharacterFavorite(id=None):
+    data = request.json
+    favorite= FavoriteCharacter(user_id=data["user_id"], character_id=id)
+    db.session.add(favorite)
+    try:
+        db.session.commit()
+        return jsonify("people saved"), 201
+    
+    except Exception as error:
+        db.session.rollback()
+        return jsonify(f'error: {error}')
+
 
 @app.route("/people", methods=["GET"])
 def getCharacter():

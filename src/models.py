@@ -26,6 +26,15 @@ class User(db.Model):
     favorites_planets: Mapped[List["FavoritePlanet"]] = relationship("FavoritePlanet",back_populates="owner")
     favorites_character: Mapped[List["FavoriteCharacter"]] = relationship("FavoriteCharacter", back_populates="owner")
 
+    def serialize(self):
+        return{
+            "id":self.id,
+            "name": self.name,
+            "username": self.username,
+            "favorites_planets": self.favorites_planets,
+            "favorites_character": self.favorites_character
+        }
+
 class Planet(db.Model):
     __tablename__ = "planet"
     id:Mapped[int] = mapped_column(primary_key=True)
@@ -40,7 +49,6 @@ class Planet(db.Model):
             "name": self.name,
             "description": self.description,
             "population":self.population,
-            "favorites_planets": self.favorites_planets
         }
 
 
@@ -58,7 +66,6 @@ class Character(db.Model):
             "name": self.name,
             "gender":self.gender.value,
             "side":self.side.value,
-            "favorites_characters":self.favorites_characters
 
         }
 
@@ -70,6 +77,15 @@ class FavoritePlanet(db.Model):
     owner: Mapped["User"] = relationship("User",back_populates="favorites_planets")
     planet: Mapped["Planet"] = relationship("Planet",back_populates="favorites_planets")
 
+    def serialize(self):
+        return{
+            "id":self.id,
+            "planet_id": self.planet_id,
+            "user_id": self.user_id
+
+        }
+
+
 class FavoriteCharacter(db.Model):
     __tablename__ = "favorites_characters"
     id:Mapped[int] = mapped_column(primary_key=True)
@@ -77,7 +93,13 @@ class FavoriteCharacter(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     owner: Mapped["User"] = relationship("User",back_populates="favorites_character")
     character: Mapped["Character"] = relationship("Character", back_populates="favorites_characters")
+    def serialize(self):
+        return{
+            "id":self.id,
+            "character_id": self.character_id,
+            "user_id": self.user_id
 
+        }
 
     
 
